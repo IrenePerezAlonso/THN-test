@@ -40,6 +40,17 @@ function retrieveAvaliabilityRooms() {
         hotelData.numRooms = numberOfRooms.innerText;
     }
 
+    function getNumGuests() {
+
+        const adults = Number(document.querySelector('span[data-key=adult]').getAttribute('data-mode'));
+        const childrens = Number(document.querySelector('span[data-key=child]').getAttribute('data-mode'));
+
+        hotelData.numAdults = adults;
+        hotelData.numChildern = childrens;
+        
+        hotelData.guests = adults + childrens;
+    }
+
     function getLanguageUsed() {
 
         const lenguage = document.documentElement.lang;
