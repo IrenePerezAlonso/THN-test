@@ -19,6 +19,12 @@ function retrieveAvaliabilityRooms() {
         hotelData.checkOutDate = pepartureDate.getAttribute('data-date');
     }
 
+    function getMinimumPriceNight() {
+        const minimumPrice = document.querySelector('.fb-price > span');
+
+        hotelData.minimumPricePerNight = minimumPrice.innerText;
+    }
+
     function getCurrency() {
 
         const currencyType = document.querySelector('#fb-headbar-block-currency > span.fb-headbar-value');
@@ -26,7 +32,7 @@ function retrieveAvaliabilityRooms() {
         hotelData.currency = currencyType.innerText;
     }
 
-    function getLanguage() {
+    function getLanguageUsed() {
 
         const lenguage = document.documentElement.lang;
 
