@@ -48,7 +48,14 @@ function retrieveAvaliabilityRooms() {
         const lenguage = document.documentElement.lang;
 
         hotelData.language = lenguage;
-      };
+    }
+
+    function getExtraData() {
+
+        const dataList = document.querySelector('span[data-key=thphu18547:promotiondesc:CAMPAIGNK-BAR-EXCL-RB] > ul');
+
+        hotelData.roomDetails = dataList.innerText;
+    }
 
     return hotelData;
 }
