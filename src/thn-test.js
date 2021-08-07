@@ -1,68 +1,145 @@
-function retrieveAvaliabilityRooms() {
+const AVAILABLE_IDS = {
+    RESULTS_ITEMS: 'results-items',
+    FB_HEADBAR_BLOCK_CURRENCY: 'fb-headbar-block-currency',
+    FB_SUMMARY_DATES_ARRIBAL: 'fb-qs-summary-dates-arrival',
+    FB_SUMMARY_DATES_DEPARTURE: 'fb-qs-summary-dates-departure',
+    FB_SUMMARY_ROOMS_QUANTITY: 'fb-qs-summary-rooms-quantity'
+};
 
-    const hotelData = {};
+const AVAILABLE_CLASSES = {
+    ACCOMMODATION_TITLE: '.fb-results-acc-title > span',
+    ACCOMMODATION_NEW_PRICE: '.new-price',
+    ACCOMMODATION_PRICE: '.fb-price > span',
+    ACCOMMODATION_RESULTS: 'fb-results-accommodation',
+    ACCOMMODATION_RATEKEY_RESULTS: 'fb-results-ratekeys'
+};
 
-    function getCheckDates() {
+const ERROR_MESSAGE = {
+    MESSAGE: 'You are not in an availability screen'
+}
 
-        const arrivalDate = document.querySelector('#fb-qs-summary-dates-arrival > span');
-        const pepartureDate = document.querySelector('#fb-qs-summary-dates-departure > span');
+class AvailableRoom {
+    accommodationTitle;
+    accommodationPrice;
+    extraInfo;
 
-        hotelData.checkInDate = arrivalDate.getAttribute('data-date');
-        hotelData.checkOutDate = pepartureDate.getAttribute('data-date');
+    constructor (room, roomExtraInfo) {
+        this.accommodationTitle = this.getAccommodationTitle(room);
+        this.accommodationPrice = this.getAccommodationPrice(room);
+        this.extraInfo = roomExtraInfo && this.getExtraInfo(roomExtraInfo);
     }
 
-    function getMinimumPriceNight() {
-
-        const minimumPrice = document.querySelector('.fb-price > span');
-
-        hotelData.minimumPricePerNight = minimumPrice.innerText;
+    getAccommodationTitle (data) {
+        return data.querySelector(AVAILABLE_CLASSES.ACCOMMODATION_TITLE).textContent;
     }
 
-    function getCurrency() {
-
-        const currencyType = document.querySelector('#fb-headbar-block-currency > span.fb-headbar-value');
-
-        hotelData.currency = currencyType.innerText;
+    getAccommodationPrice (data) {
+        const newPrice = data.querySelector(AVAILABLE_CLASSES.ACCOMMODATION_NEW_PRICE);
+        if(newPrice) return newPrice.querySelector(AVAILABLE_CLASSES.ACCOMMODATION_PRICE).textContent;
+        else return data.querySelector(AVAILABLE_CLASSES.ACCOMMODATION_PRICE).textContent;
     }
 
-    function numRooms() {
+    getExtraInfo(data) {
+        const spans = data.getElementsByTagName('span');
+        const resultingRateKeys = [];
 
-        const numberOfRooms = document.querySelector('#fb-qs-summary-rooms-quantity > span');
+        for (let i = 0; i < spans.length; i++) {
+            const rateKey = spans[i].textContent;
+            resultingRateKeys[i] = rateKey;
+        }
 
-        hotelData.numRooms = numberOfRooms.innerText;
+        return resultingRateKeys;
     }
+}
 
-    function getNumGuests() {
-
-        const adults = Number(document.querySelector('span[data-key=adult]').getAttribute('data-mode'));
-        const childrens = Number(document.querySelector('span[data-key=child]').getAttribute('data-mode'));
-
-        hotelData.numAdults = adults;
-        hotelData.numChildern = childrens;
+class SearchData {
+    checkDates;
+    minimumPricePerNight;
+    currency;
+    numRooms;
+    numGuests;
+    language;
+    availableRooms;
+    
+    constructor() {
+        this.checkDates = this.getCheckDates();
+        this.minimumPricePerNight = this.getMinimumPriceNight();
+        this.currency = this.getCurrency();
+        this.numRooms = this.getNumRooms();
+        this.numGuests = this.getNumGuests();
+        this.language = this.getLanguageUsed();
+        this.availableRooms = this.getAvailableRooms();
+    }
         
-        hotelData.guests = adults + childrens;
+    getCheckDates () {
+        const arrivalDate = document.querySelector(`#${AVAILABLE_IDS.FB_SUMMARY_DATES_ARRIBAL} > span`);
+        const pepartureDate = document.querySelector(`#${AVAILABLE_IDS.FB_SUMMARY_DATES_DEPARTURE} > span`);
+        
+        return {  
+            checkInDate: arrivalDate.getAttribute('data-date'),
+            checkOutDate: pepartureDate.getAttribute('data-date')
+        }
     }
 
-    function getLanguageUsed() {
+    getMinimumPriceNight() {
+        const minimumPrice = document.querySelector(AVAILABLE_CLASSES.ACCOMMODATION_PRICE);
 
-        const lenguage = document.documentElement.lang;
-
-        hotelData.language = lenguage;
+        return minimumPrice.innerText;
     }
 
-    function getExtraData() {
+    getCurrency() {
+        const currencyType = document.querySelector(`#${AVAILABLE_IDS.FB_HEADBAR_BLOCK_CURRENCY} > span.fb-headbar-value`);
 
-        const dataList = document.querySelector('span[data-key=thphu18547:promotiondesc:CAMPAIGNK-BAR-EXCL-RB] > ul');
-
-        hotelData.roomDetails = dataList.innerText;
+        return currencyType.innerText;
     }
 
-    return hotelData;
+    getNumRooms() {
+        const numberOfRooms = document.querySelector(`#${AVAILABLE_IDS.FB_SUMMARY_ROOMS_QUANTITY} > span`);
+
+        return numberOfRooms.innerText;
+    }
+
+    getNumGuests() {
+        const numAdults = Number(document.querySelector('span[data-key=adult]').getAttribute('data-mode'));
+        const numChildren = Number(document.querySelector('span[data-key=child]').getAttribute('data-mode'));
+
+        return {
+            numAdults,
+            numChildren,
+            guests: numAdults + numChildren
+        }
+    }
+
+    getLanguageUsed() {
+        const language = document.documentElement.lang;
+
+        return language;
+    }
+
+    getAvailableRooms() {
+        const rooms = document.getElementById(AVAILABLE_IDS.RESULTS_ITEMS).getElementsByClassName(AVAILABLE_CLASSES.ACCOMMODATION_RESULTS);
+        const availableRooms = []
+
+        for (let i = 0; i < rooms.length; i++) {
+            const room = rooms[i];
+            const roomExtraInfo = room.getElementsByClassName(AVAILABLE_CLASSES.ACCOMMODATION_RATEKEY_RESULTS)[0];
+
+            availableRooms[i] = new AvailableRoom(room, roomExtraInfo);
+        }
+
+        return availableRooms;
+    }
 }
 
 function avaliabilityOptions() {
-    const availabilityObjest = retrieveAvaliabilityRooms();
+    const isAvailabilityScreen = !!document.querySelector('span[data-key=adult]');
 
-    if(!availabilityObjest) console.error('You are not in an availability screen');
-    else return availabilityObjest;
+    if(!isAvailabilityScreen) console.error(ERROR_MESSAGE.MESSAGE);
+    else {
+        const results = new SearchData();
+    
+        return results;
+    }
 }
+
+avaliabilityOptions();
